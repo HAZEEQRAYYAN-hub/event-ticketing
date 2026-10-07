@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Event Tickets</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+<header>
+  <h1>Event Tickets</h1>
+  <nav>
+    <button data-view="events">Events</button>
+    <button data-view="bookings" data-show="auth">Bookings</button>
+    <button data-view="manage" data-show="staff">Manage</button>
+    <button data-view="login" data-show="guest">Login</button>
+    <button data-action="logout" data-show="auth">Logout</button>
+  </nav>
+  <small id="who"></small>
+</header>
+
+<p id="msg" role="alert"></p>
+
+<main>
+  <section id="view-login" class="view" hidden>
+    <div class="grid2">
+      <form id="loginForm" class="panel" novalidate>
+        <h2>Login</h2>
+        <input id="l_email" placeholder="Email" autocomplete="username">
+        <input id="l_pw" type="password" placeholder="Password" autocomplete="current-password">
+        <button>Login</button>
+      </form>
+      <form id="registerForm" class="panel" novalidate>
+        <h2>Register</h2>
+        <input id="r_name" placeholder="Name">
+        <input id="r_email" placeholder="Email">
+        <input id="r_pw" type="password" placeholder="Password (min 8 characters)">
+        <button>Create account</button>
+      </form>
+    </div>
+  </section>
+
+  <section id="view-events" class="view">
+    <div class="toolbar">
+      <input id="q" placeholder="Search events">
+      <input id="maxPrice" type="number" placeholder="Max price">
+      <select id="sort">
+        <option value="event_date">Sort by date</option>
+        <option value="ticket_price">Sort by price</option>
+        <option value="title">Sort by title</option>
+      </select>
+      <select id="order">
+        <option value="asc">Ascending</option>
+        <option value="desc">Descending</option>
+      </select>
+      <button data-action="search">Search</button>
+    </div>
+    <div id="eventList" class="cards"></div>
+    <div class="pager">
+      <button data-action="prev">Prev</button>
+      <span id="pageInfo"></span>
+      <button data-action="next">Next</button>
+    </div>
+  </section>
+
+  <section id="view-bookings" class="view" hidden>
+    <h2>Bookings</h2>
+    <div id="bookingList" class="cards"></div>
+  </section>
+
+  <section id="view-manage" class="view" hidden>
+    <div class="grid2">
+      <form id="eventForm" class="panel" novalidate>
+        <h2 id="eventFormTitle">New event</h2>
+        <input type="hidden" id="e_id">
+        <input id="e_title" placeholder="Title">
+        <textarea id="e_desc" placeholder="Description"></textarea>
+        <select id="e_venue"></select>
+        <input id="e_date" type="datetime-local">
+        <input id="e_price" type="number" step="0.01" placeholder="Ticket price">
+        <input id="e_total" type="number" placeholder="Total tickets">
+        <button>Save event</button>
+        <button type="button" data-action="resetEvent">Clear</button>
+      </form>
+      <form id="venueForm" class="panel" novalidate>
+        <h2 id="venueFormTitle">New venue</h2>
+        <input type="hidden" id="v_id">
+        <input id="v_name" placeholder="Name">
+        <input id="v_address" placeholder="Address">
+        <input id="v_city" placeholder="City">
+        <input id="v_capacity" type="number" placeholder="Capacity">
+        <button>Save venue</button>
+        <button type="button" data-action="resetVenue">Clear</button>
+      </form>
+    </div>
+    <h3>Events</h3>
+    <div id="manageEvents" class="cards"></div>
+    <h3>Venues</h3>
+    <div id="venueList" class="cards"></div>
+    <div data-show="admin">
+      <h3>Users (admin only)</h3>
+      <div id="userList" class="cards"></div>
+    </div>
+  </section>
+</main>
+
+<dialog id="qrDialog">
+  <h3>Your ticket</h3>
+  <img id="qrImg" alt="Ticket QR code" width="200" height="200">
+  <p id="qrText"></p>
+  <form method="dialog"><button>Close</button></form>
+</dialog>
+
+<script src="app.js"></script>
+</body>
+</html>
