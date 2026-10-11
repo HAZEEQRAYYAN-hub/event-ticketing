@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Box Office</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@700;800&family=Instrument+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<!-- ============ Sign in and register ============ -->
+<div id="loginView" class="login" hidden>
+  <div class="login-ticket">
+    <div class="login-stub">
+      <p class="login-brand">Box Office</p>
+      <p>Look around as a guest. Sign in to book tickets, or to run events.</p>
+    </div>
+    <form id="loginForm" class="login-form" novalidate>
+      <h1>Sign in</h1>
+      <p id="loginNotice" class="notice" role="status" hidden></p>
+      <label class="field">
+        <span>Email</span>
+        <input name="email" type="email" autocomplete="username">
+        <small class="field-error" data-error-for="email"></small>
+      </label>
+      <label class="field">
+        <span>Password</span>
+        <input name="password" type="password" autocomplete="current-password">
+        <small class="field-error" data-error-for="password"></small>
+      </label>
+      <p class="form-error" role="alert"></p>
+      <button class="btn btn-primary btn-wide" type="submit">Sign in</button>
+      <p class="login-switch">No account yet?</p>
+      <button id="showRegister" class="btn btn-wide" type="button">Register</button>
+      <p class="login-help"><a href="#/events" id="browseGuest">Browse without signing in</a></p>
+    </form>
+
+    <!-- Shown in place of the sign-in form when Register is pressed -->
+    <form id="registerForm" class="login-form" novalidate hidden>
+      <h1>Register</h1>
+      <label class="field">
+        <span>Full name</span>
+        <input name="name" type="text" autocomplete="name" maxlength="100">
+        <small class="field-error" data-error-for="name"></small>
+      </label>
+      <label class="field">
+        <span>Email</span>
+        <input name="email" type="email" autocomplete="email" maxlength="150">
+        <small class="field-error" data-error-for="email"></small>
+      </label>
+      <label class="field">
+        <span>Password <em>(at least 8 characters)</em></span>
+        <input name="password" type="password" autocomplete="new-password" maxlength="72">
+        <small class="field-error" data-error-for="password"></small>
+      </label>
+      <label class="field">
+        <span>Password again</span>
+        <input name="confirm" type="password" autocomplete="new-password" maxlength="72">
+        <small class="field-error" data-error-for="confirm"></small>
+      </label>
+      <p class="form-error" role="alert"></p>
+      <button class="btn btn-primary btn-wide" type="submit">Create account</button>
+      <button id="showLogin" class="btn btn-wide" type="button">Back to sign in</button>
+      <p class="login-help">Registering gives you a customer account for booking tickets. Organiser and administrator accounts are set up by the team.</p>
+    </form>
+  </div>
+</div>
+
+<!-- ============ App shell ============ -->
+<div id="shell" class="shell" hidden>
+  <aside class="side">
+    <a class="brand" id="brand" href="#/events">Box Office<small id="brandNote">Events and tickets</small></a>
+    <nav id="nav" class="nav" aria-label="Main"></nav>
+    <!-- One of these two blocks is shown, depending on whether anyone is signed in -->
+    <div class="side-user" id="sideUser" hidden>
+      <a href="#/profile" id="whoName" class="who-name"></a>
+      <span id="whoRole" class="who-role"></span>
+      <button id="signOut" class="btn btn-on-dark" type="button">Sign out</button>
+    </div>
+    <div class="side-user side-guest" id="sideGuest" hidden>
+      <span class="who-role">Browsing as a guest</span>
+      <a class="btn btn-primary" href="#/signin">Sign in</a>
+      <a class="btn btn-on-dark" href="#/register">Register</a>
+    </div>
+  </aside>
+
+  <div class="main">
+    <main id="view" tabindex="-1"></main>
+    <footer id="owner" class="owner"></footer>
+  </div>
+</div>
+
+<div id="toasts" class="toasts" aria-live="polite"></div>
+
+<!-- ============ Dialogs ============ -->
+
+<!-- Create or edit an event -->
+<dialog id="eventDialog" class="dialog">
+  <form id="eventForm" novalidate>
+    <h2 id="eventFormTitle">New event</h2>
+    <input type="hidden" name="id">
+    <label class="field">
+      <span>Title</span>
+      <input name="title" maxlength="200" autocomplete="off">
+      <small class="field-error" data-error-for="title"></small>
+    </label>
+    <label class="field">
+      <span>Description <em>optional</em></span>
+      <textarea name="description" rows="3"></textarea>
+    </label>
+    <label class="field">
+      <span>Venue</span>
+      <select name="venue_id"></select>
+      <small class="field-error" data-error-for="venue_id"></small>
+    </label>
+    <label class="field">
+      <span>Date and time</span>
+      <input name="event_date" type="datetime-local">
+      <small class="field-error" data-error-for="event_date"></small>
+    </label>
+    <div class="field-row">
+      <label class="field">
+        <span>Ticket price (RM)</span>
+        <input name="ticket_price" type="number" min="0" step="0.01" inputmode="decimal">
+        <small class="field-error" data-error-for="ticket_price"></small>
+      </label>
+      <label class="field">
+        <span>Total tickets</span>
+        <input name="total_tickets" type="number" min="1" step="1" inputmode="numeric">
+        <small class="field-hint" id="capacityHint"></small>
+        <small class="field-error" data-error-for="total_tickets"></small>
+      </label>
+    </div>
+    <label class="field" id="eventStatusField">
+      <span>Status</span>
+      <select name="status">
+        <option value="published">Published, on sale to customers</option>
+        <option value="draft">Draft, hidden from customers</option>
+        <option value="cancelled">Cancelled</option>
+      </select>
+      <small class="field-error" data-error-for="status"></small>
+    </label>
+    <p class="form-error" role="alert"></p>
+    <div class="dialog-actions">
+      <button class="btn" type="button" data-close>Discard</button>
+      <button class="btn btn-primary" type="submit">Save event</button>
+    </div>
+  </form>
+</dialog>
+
+<!-- Create or edit a venue -->
+<dialog id="venueDialog" class="dialog">
+  <form id="venueForm" novalidate>
+    <h2 id="venueFormTitle">New venue</h2>
+    <input type="hidden" name="id">
+    <label class="field">
+      <span>Name</span>
+      <input name="name" maxlength="150" autocomplete="off">
+      <small class="field-error" data-error-for="name"></small>
+    </label>
+    <label class="field">
+      <span>Address</span>
+      <input name="address" maxlength="255" autocomplete="off">
+      <small class="field-error" data-error-for="address"></small>
+    </label>
+    <div class="field-row">
+      <label class="field">
+        <span>City</span>
+        <input name="city" maxlength="100" autocomplete="off">
+        <small class="field-error" data-error-for="city"></small>
+      </label>
+      <label class="field">
+        <span>Capacity</span>
+        <input name="capacity" type="number" min="1" step="1" inputmode="numeric">
+        <small class="field-error" data-error-for="capacity"></small>
+      </label>
+    </div>
+    <p class="form-error" role="alert"></p>
+    <div class="dialog-actions">
+      <button class="btn" type="button" data-close>Discard</button>
+      <button class="btn btn-primary" type="submit">Save venue</button>
+    </div>
+  </form>
+</dialog>
+
+<!-- Rename a user (admin) -->
+<dialog id="userDialog" class="dialog dialog-narrow">
+  <form id="userForm" novalidate>
+    <h2>Rename user</h2>
+    <input type="hidden" name="id">
+    <label class="field">
+      <span>Name</span>
+      <input name="name" maxlength="100" autocomplete="off">
+      <small class="field-error" data-error-for="name"></small>
+    </label>
+    <p class="form-error" role="alert"></p>
+    <div class="dialog-actions">
+      <button class="btn" type="button" data-close>Discard</button>
+      <button class="btn btn-primary" type="submit">Save name</button>
+    </div>
+  </form>
+</dialog>
+
+<!-- Book tickets for one event (customers) -->
+<dialog id="bookDialog" class="dialog dialog-narrow">
+  <form id="bookForm" novalidate>
+    <h2>Book tickets</h2>
+    <dl class="details" id="bookEvent"></dl>
+    <label class="field book-quantity">
+      <span>How many tickets?</span>
+      <input name="quantity" type="number" min="1" max="10" step="1" value="1" inputmode="numeric">
+      <small class="field-hint" id="bookHint"></small>
+      <small class="field-error" data-error-for="quantity"></small>
+    </label>
+    <p class="book-total">Total <strong id="bookTotal"></strong></p>
+    <p class="form-error" role="alert"></p>
+    <div class="dialog-actions">
+      <button class="btn" type="button" data-close>Not now</button>
+      <button class="btn btn-primary" type="submit">Confirm booking</button>
+    </div>
+  </form>
+</dialog>
+
+<!-- One booking in detail -->
+<dialog id="bookingDialog" class="dialog dialog-narrow">
+  <h2 id="bookingTitle">Booking</h2>
+  <div id="bookingBody"></div>
+  <div class="dialog-actions">
+    <button class="btn" type="button" data-close>Close</button>
+  </div>
+</dialog>
+
+<!-- "Are you sure?" -->
+<dialog id="confirmDialog" class="dialog dialog-narrow">
+  <form method="dialog">
+    <h2 id="confirmTitle"></h2>
+    <p id="confirmMessage"></p>
+    <div class="dialog-actions">
+      <button class="btn" value="no">Go back</button>
+      <button id="confirmYes" class="btn btn-primary" value="yes">Confirm</button>
+    </div>
+  </form>
+</dialog>
+
+<!-- Scripts load in this order because each one uses the ones above it -->
+<script src="js/config.js"></script>
+<script src="js/api.js"></script>
+<script src="js/ui.js"></script>
+<script src="js/pages/login.js"></script>
+<script src="js/pages/register.js"></script>
+<script src="js/pages/overview.js"></script>
+<script src="js/pages/events.js"></script>
+<script src="js/pages/venues.js"></script>
+<script src="js/pages/bookings.js"></script>
+<script src="js/pages/book.js"></script>
+<script src="js/pages/users.js"></script>
+<script src="js/pages/profile.js"></script>
+<script src="js/app.js"></script>
+
+<!-- If a file is missing the app never starts and both screens stay hidden.
+     This says which file it is, on the page, in place of a blank screen. -->
+<div id="startError" class="start-error" role="alert" hidden>
+  <h1>Box Office couldn't start</h1>
+  <p id="startErrorText"></p>
+  <p>Every file in this folder is needed. Check that <code>index.html</code> sits next to the <code>css</code> and <code>js</code> folders, and that nothing was left behind when the files were copied.</p>
+</div>
+<script>
+  (function () {
+    var started = !document.getElementById('shell').hidden || !document.getElementById('loginView').hidden;
+    if (started) return;
+    // Each file defines one name. A name that is not there means its file did not load.
+    var files = {
+      'js/config.js': typeof CONFIG, 'js/api.js': typeof Api, 'js/ui.js': typeof UI,
+      'js/pages/login.js': typeof LoginPage, 'js/pages/register.js': typeof RegisterPage,
+      'js/pages/overview.js': typeof OverviewPage, 'js/pages/events.js': typeof EventsPage,
+      'js/pages/venues.js': typeof VenuesPage, 'js/pages/bookings.js': typeof BookingsPage,
+      'js/pages/book.js': typeof BookForm, 'js/pages/users.js': typeof UsersPage,
+      'js/pages/profile.js': typeof ProfilePage, 'js/app.js': typeof App
+    };
+    var missing = Object.keys(files).filter(function (name) { return files[name] === 'undefined'; });
+    document.getElementById('startErrorText').textContent = missing.length
+      ? 'Missing or broken: ' + missing.join(', ') + '.'
+      : 'One of the script files stopped with an error. Press F12 and open the Console tab to see which.';
+    document.getElementById('startError').hidden = false;
+  })();
+</script>
+</body>
+</html>
+
