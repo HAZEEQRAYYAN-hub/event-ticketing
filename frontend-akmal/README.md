@@ -2,7 +2,7 @@
 
 Individual frontend for the Event Ticketing and Venue Booking System (SWC3633/SWC4443).
 
-**Author:** YOUR NAME (YOUR STUDENT ID)
+**Author:** AKMAL FARHAN BIN HAMIZAN (AM2512021926)
 
 This frontend is the staff side of the system. Organisers and administrators use it to manage events, venues, bookings and user accounts through the group's shared REST API. Customers cannot sign in here; booking tickets belongs to the customer frontend.
 
