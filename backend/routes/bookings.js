@@ -33,7 +33,8 @@ router.post('/', authenticate, authorize('customer'), [
 
   let qr_code = null;
   try { qr_code = await generateQr(`BOOKING-${bookingId}-EVENT-${event_id}`); } catch (e) { console.error('QR failed', e.message); }
-  res.status(201).json({ id: bookingId, event_id, quantity, total_price: total, status: 'confirmed', qr_code });
+  res.status(201).json({ id: bookingId, event_id, quantity, total_price: total, status: 'confirmed',
+    approval_status: 'pending', qr_code });
 });
 
 router.get('/', authenticate, async (req, res) => {
@@ -66,6 +67,18 @@ router.patch('/:id/cancel', authenticate, async (req, res) => {
     res.json({ message: 'Booking cancelled' });
   } catch (e) { await conn.rollback(); throw e; }
   finally { conn.release(); }
+});
+
+// Admin approves a new booking (for example after checking the customer has paid).
+// New bookings start as approval_status 'pending'. Rejecting uses PATCH /:id/cancel.
+router.patch('/:id/approve', authenticate, authorize('admin'), async (req, res) => {
+  const [rows] = await db.query('SELECT * FROM bookings WHERE id=?', [req.params.id]);
+  const b = rows[0];
+  if (!b) throw httpError(404, 'Booking not found');
+  if (b.status === 'cancelled') throw httpError(409, 'Cannot approve a cancelled booking');
+  if (b.approval_status === 'approved') throw httpError(409, 'Booking already approved');
+  await db.query("UPDATE bookings SET approval_status='approved' WHERE id=?", [b.id]);
+  res.json({ message: 'Booking approved' });
 });
 
 router.delete('/:id', authenticate, authorize('admin'), async (req, res) => {

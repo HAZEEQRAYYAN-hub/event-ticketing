@@ -41,6 +41,7 @@ CREATE TABLE bookings (
   quantity INT NOT NULL CHECK (quantity > 0),
   total_price DECIMAL(10,2) NOT NULL,
   status ENUM('confirmed','cancelled') NOT NULL DEFAULT 'confirmed',
+  approval_status ENUM('pending','approved') NOT NULL DEFAULT 'pending',
   booked_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   FOREIGN KEY (user_id) REFERENCES users(id),
   FOREIGN KEY (event_id) REFERENCES events(id),
